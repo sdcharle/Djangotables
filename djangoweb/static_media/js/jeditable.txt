@@ -1,0 +1,328 @@
+jEditable key examples
+
+
+Jeditable
+
+Edit in place plugin for jQuery.
+
+    * weblog
+    * projects
+    * cv
+
+For those in hurry download latest source or minified. For bleeding edge version check GitHub.
+How does in place editing work?
+
+Normal flow is this. User clicks text on web page. Block of text becomes a form. User edits contents and presses submit button. New text is sent to webserver and saved. Form becomes normal text again.
+Basic usage
+
+While reading you might also want to check live demo. For basic examples we assume to have following xhtml elements.
+
+<div class="edit" id="div_1">Dolor</div>
+<div class="edit_area" id="div_2">Lorem ipsum dolor sit amet, consectetuer 
+adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore 
+magna aliquam erat volutpat.</div>
+
+There is only one mandatory parameter. URL where browser posts edited content.
+
+ $(document).ready(function() {
+     $('.edit').editable('http://www.example.com/save.php');
+ });
+
+Code above does several things: Elements with class edit become editable. Editing starts with single mouse click. Form input element is text. Width and height of input element matches the original element. If users clicks outside form changes are discarded. Same thing happens if users hits ESC. When user hits ENTER browser submits text to save.php at www.example.com.
+
+Not bad for oneliner, huh? Lets add some options.
+
+Elements with class edit_area will use textarea as input. They will also have spinning image when data is being submitted to server. Elements with class edit will have text Saving… instead of spinning image. As a bonus lets add tooltip to both. Tooltips are great for informing users what they should do.
+
+ $(document).ready(function() {
+     $('.edit').editable('http://www.example.com/save.php', {
+         indicator : 'Saving...',
+         tooltip   : 'Click to edit...'
+     });
+     $('.edit_area').editable('http://www.example.com/save.php', { 
+         type      : 'textarea',
+         cancel    : 'Cancel',
+         submit    : 'OK',
+         indicator : '<img src="img/indicator.gif">',
+         tooltip   : 'Click to edit...'
+     });
+ });
+
+These two examples cover most of needs you usually have. Since most of people like to tweak and hack, lets go forward…
+What is sent to server?
+
+When submitting change following data will be POST:ed to server:
+
+id=elements_id&value=user_edited_content
+
+In some cases you might want to change default parameter names. If you want to data to be POST:ed as:
+
+elementid=elements_id&newvalue=user_edited_content
+
+you need to add two parameters:
+
+ $(document).ready(function() {
+     $('.edit').editable('http://www.example.com/save.php', { 
+         id   : 'elementid',
+         name : 'newvalue'
+     });
+ });
+ 
+ 
+ 
+ 
+ FROM DATATABLES SITE:
+ 
+ var oTable;
+
+$(document).ready(function() {
+	/* Apply the jEditable handlers to the table */
+	$('#example tbody td').editable( 'media/examples_support/editable_ajax.php', {
+		"callback": function( sValue, y ) {
+			var aPos = oTable.fnGetPosition( this );
+			oTable.fnUpdate( sValue, aPos[0], aPos[1] );
+		},
+		"height": "14px"
+	} );
+	
+	/* Init DataTables */
+	oTable = $('#example').dataTable();
+} );
+
+fnUpdare etc...
+
+You are quite right - there is indeed a discrepancy between my two API functions there.
+The reason for the fnGetPosition() returning the node position is that it makes updating the DOM element much easier -
+while at the same time the fnUpdate() function needs to update data based on it's position in the internal storage array.
+
+To address this what I think I will do is to include a little bit more information in the array returned by fnGetPosition().
+A third element which is the column index (including hidden columns) would help to address this. Does this sound reasonable?
+
+With regard to fnRender() for an update - you are quite right - this is a bug and I'll address that in the next release.
+
+01.$(document).ready(function() {
+02.    $('#example tbody td').click( function () {
+03.        /* Get the position of the current data from the node */
+04.        var aPos = oTable.fnGetPosition( this );
+05.         
+06.        /* Get the data array for this row */
+07.        var aData = oTable.fnGetData( aPos[0] );
+08.         
+09.        /* Update the data array and return the value */
+10.        aData[ aPos[1] ] = 'clicked';
+11.        this.innerHTML = 'clicked';
+12.    } );
+13.     
+14.    /* Init DataTables */
+15.    oTable = $('#example').dataTable();
+16.} );
+
+
+
+Had to mush them together w:
+
+fnDrawCallback (ensure evts tied to table...)
+
+
+OTHER fun notes!
+
+"fnDrawCallback": function() {
+...
+$("#searchGrid tbody tr").click(function() {
+var position = searchTable.fnGetPosition(this); // getting the clicked row position
+var contactId = searchTable.fnGetData(position)[0]; // getting the value of the first (invisible) column
+
+document.location.href = "../Customer/View/" + contactId;
+});
+}
+
+
+Also need add/delete for full func:
+
+
+function : fnDeleteRow
+Remove a row from the table. Redraw is not automatic on this function.
+Input parameters:
+1. int : Index of the row to delete.
+Return parameter:
+void
+
+
+function : fnOpen
+This function will place a new row directly after a row which is currently on display on the page, with the HTMl contents that is passed into the function. This can be used, for example, to ask for confirmation that a particular record should be deleted.
+Input parameters:
+1. node - the table row to 'open'
+2. string - the HTML to put into the row
+3. string - class to give the new row
+Return parameter:
+void
+function : fnClose
+The exact opposite of 'opening' a row, this function will close any rows which are currently 'open'.
+Input parameters:
+void
+Return parame
+
+
+function : fnDecrement
+If you are using fnOpen/fnClose to delete records from a table and are displaying an index of the records on display, fnDecrement can be utilised to keep the index up-to-date based on the deleted row. All indexes greater that the deleted row are decremented by one.
+Input parameters:
+1. int - Index at which to start decrementing
+2. int - The column the data is stored in which should be decremented.
+Return parameter:
+void
+
+
+Highlight?
+
+Note, with add, edit, whatever...the effect is immediately wiped when the table refreshes from the DB.
+
+
+This feature is disabled by default, but can be easily enabled using the bStateSave initialisation parameter as shown in this example. Note also that the duration of the cookie can be set using the iCookieDuration initialisation parameter (which is in seconds).
+
+highlight
+
+var oTable;
+
+$(document).ready(function() {
+	$('#example tbody td').hover( function() {
+		var iCol = $('td').index(this) % 5;
+		var nTrs = oTable.fnGetNodes();
+		$('td:nth-child('+(iCol+1)+')', nTrs).addClass( 'highlighted' );
+	}, function() {
+		var nTrs = oTable.fnGetNodes();
+		$('td.highlighted', nTrs).removeClass('highlighted');
+	} );
+	
+	oTable = $('#example').dataTable( {
+		"bSortClasses": false
+	} );
+} );
+
+Delete:
+
+It can be quite useful at times to provide the user with the option to select rows in a DataTable.
+This can be done using the API functions that DataTables provides.
+The example below uses the fnRowCallback() function to add a 'click' listener to each row,
+which will highlight the required row when selected. The indexes of the selected rows are then provided through the custom function
+fnGetSelected() for later processing.
+
+var oTable;
+var giRedraw = false;
+
+$(document).ready(function() {
+	/* Add a click handler to the rows - this could be used as a callback */
+	$("#example tbody").click(function(event) {
+		$(oTable.fnSettings().aoData).each(function (){
+			$(this.nTr).removeClass('row_selected');
+		});
+		$(event.target.parentNode).addClass('row_selected');
+	});
+	
+	/* Add a click handler for the delete row */
+	$('#delete').click( function() {
+		var anSelected = fnGetSelected( oTable );
+		var iRow = oTable.fnGetPosition( anSelected[0] );
+		oTable.fnDeleteRow( iRow );
+	} );
+	
+	/* Init the table */
+	oTable = $('#example').dataTable( );
+} );
+
+
+/* Get the rows which are currently selected */
+function fnGetSelected( oTableLocal )
+{
+	var aReturn = new Array();
+	var aTrs = oTableLocal.fnGetNodes();
+	
+	for ( var i=0 ; i<aTrs.length ; i++ )
+	{
+		if ( $(aTrs[i]).hasClass('row_selected') )
+		{
+			aReturn.push( aTrs[i] );
+		}
+	}
+	return aReturn;
+}
+
+
+HOW ABOUT TABS?
+
+Try
+
+$('div.editbox').bind('keydown', function(evt) {
+        if(evt.keyCode==9) {
+            $(this).find("input").blur();
+            var nextBox='';
+             if ($("div.editbox").index(this) == ($("div.editbox").length-1)) {
+                    nextBox=$("div.editbox:first");         //last box, go to first
+                } else {
+                    nextBox=$(this).next("div.editbox");    //Next box in line
+                }
+            $(nextBox).dblclick();  //Go to assigned next box
+            return false;           //Suppress normal tab
+        };
+    });
+
+
+e.g $(":input:eq(" + $(":input").index(this) + 1 + ")");
+
+
+
+8/8/09
+
+Probably should bail.
+
+Tab between fields not working so hot.
+
+Also, looks nasty as it's tabbing across anyhow.
+
+Various problems:
+
+editing is easy enough however: can edit and advance but it does not show (until data reloaded)
+
+If you update the table value, fucks the attempt to tab on.
+
+Probably need to revert to how (if any) way to update table w/out redrawing and fucking things!
+
+
+8/10/09
+
+Tabbing is shitty so try:
+
+focus turns whole row into text fields w/ save and cancel buttons
+
+save posts ALL fields to server. cancel reverts (redraws) table w/out any help there
+
+FROM THE SOURCE
+
+Very nice idea. With the deselect issue that you are seeing, I very much suspect that it's due to the fnUpdate call in the jEditable callback.
+The tab moves on to the next cell and then the table is redrawn using the server data,
+thus resulting in the appearance of the cell being editable for a short time only.
+
+What might be needed is to move the 'making the next cell editable' into fnDrawCallback(),
+and use a flag to indicate which cell should be made editable once the draw has completed - what do you think?
+The other option is to not redraw the table at all during the update, and try to keep the server and client-side stuff separate at that point.
+
+
+What is the point of fnDrawCallback function, when it takes no parameters and returns void?
+The documentation says: "This function is called on every 'draw' event, and allows you to dynamically modify any aspect you want about the created DOM".
+
+oTable = $('#whatever').dataTable( { fnDrawCallback: function() { oTable.fnGetColumnData();... } } ); ?
+
+$(document).ready(function() {
+	$('#example').dataTable( {
+		"aoColumns": [ 
+			/* Engine */   null,
+			/* Browser */  null,
+			/* Platform */ { "bSearchable": false,
+			                 "bVisible":    false },
+			/* Version */  { "bVisible":    false },
+			/* Grade */    null
+		] } );
+} );
+
+You can try the hidden thing, but it jacks the advancing thing (edits prev cell)
+
+Also w/ the pagination if you edit page 3 redraw takes you back to page 1.

@@ -1,0 +1,236 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		
+		<title>CD Table Display</title>
+		<style type="text/css" title="currentStyle">
+			@import "../../static_media/css/basics.css";
+		</style>
+		<script src="http://www.google.com/jsapi"></script>
+		<script type="text/javascript" charset="utf-8">
+		google.load("jquery", "1.3.2");
+		</script>
+		<!--<script type="text/javascript" language="javascript" src="/static_media/js/jquery.js"></script>-->
+		<script type="text/javascript" language="javascript" src="/static_media/js/jquery.dataTables.js"></script>
+		<script type="text/javascript" language="javascript" src="/static_media/js/jquery.jEditable.js"></script>
+		<script type="text/javascript" charset="utf-8">
+		        function isInteger(value) {
+				if((parseFloat(value) == parseInt(value)) && !isNaN(parseInt(value))){
+					return true;
+				} else {
+					return false;
+				} 
+			}
+			var indexShit = -1;
+			var textShit;
+		        var oTable;
+
+			$(document).ready(function() {
+				oTable = $('#supertable').dataTable( {
+					// tried to hide a col but it fucked editing
+					"bProcessing": true, // shows 'processing' label
+					"bServerSide": true, // - dropping this but leaving cd = troub
+					"sAjaxSource": "/cds/",
+					"fnDrawCallback": function () {
+						if (indexShit >= 0) {
+							nextBox = $("#supertable tbody td:eq(" +(indexShit)+")");
+							reAddEdity();
+							$(nextBox).click();
+							indexShit = -1;
+							console.log($(nextBox).text());
+						}
+/*
+Have you reapplied the jEditable event handlers before your call .click()?
+What happens when DataTables is using server-side processing is that it recreates the DOM elements on each draw,
+so any events attached to the old table are lost, and need to be replaced.
+*/
+						$('#supertable tbody td').editable( '/editor/', {
+							//"onblur": "submit", // submits but then focus is FUCKED
+							"callback": function( sValue, y ) {
+								console.log(this);
+								console.log(sValue);
+								console.log(y);
+								// above - note the callback called twice
+								/* Redraw the table from the new data on the server */
+								oTable.fnDraw();
+								var aPos = oTable.fnGetPosition( this );
+								oTable.fnUpdate( sValue, aPos[0], aPos[1] ); 
+								// UPDATE sends first call...after this the get happens again...
+								// note, there are TWO calls to grab data following tha edit
+								var row = oTable.fnGetData(aPos[0]);
+								$.post('/update/', { cdid: row[0], asin:row[1], artist:row[2], title:row[3], upc:row[4] });
+							},
+							"height": "14px"
+						} );
+						// note, still need to blast the update son if a tab happens
+						// what works: idx
+						// put this OUTSIDE the callback?
+						$('#supertable tbody td').bind('keydown', function(evt) {
+							if(evt.keyCode==9) {
+								
+								textshit = $(this).find('input').val(); // < - gets new val which you'd need to post
+								var nextBox;
+								idx = $("#supertable tbody td").index(this);
+								indexShit = idx + 1;
+								nextBox = $("#supertable tbody td:eq(" +(idx+1)+")");
+								$(this).find("input").blur(); // doesn't do anything
+								$.post('/editor/', { value:textshit });
+								sendTheEdit(this, textshit);
+								return false;           //Suppress normal tab
+							}
+						});
+					} // fnDraw callback...
+				} ); // oTable defined.
+				/* sdc add 7/17/09 */
+				/* Add a click handler to the rows - this could be used as a callback */
+				$("#supertable tbody").click(function(event) {
+					//alert('clicky');
+					$(oTable.fnSettings().aoData).each(function (){
+						$(this.nTr).removeClass('row_selected');
+					});
+					$(event.target.parentNode).addClass('row_selected');
+				});
+				
+				/* Add a click handler for the delete row */
+				$('#delete').click( function() {
+					var anSelected = fnGetSelected( oTable );
+					if (anSelected.length > 0) { //is there shit to do...
+						var iRow = oTable.fnGetPosition( anSelected[0] ); // actually the row num here
+						var CDID =  oTable.fnGetData(iRow)[0];
+						$.post('/delete/', { cdid: CDID });
+						oTable.fnDeleteRow( iRow );
+					}
+				} );				
+			}); // doc ready	
+			
+			// weird shit: Warning - added data does not match known column length
+			function fnClickAddRow() {
+				fields = $("#newRow input")
+				asin = $(fields.get(0)).val();
+				artist = $(fields.get(1)).val();
+				title = $(fields.get(2)).val();
+				upc = $(fields.get(3)).val();
+				// post new data and redraw..
+				//id('newRow')/input[1]
+				cdid = 0
+				$.post('/add/', { 
+				       asin: asin,
+				       artist: artist,
+				       title: title,
+				       upc:upc
+				       },
+				       function(response, status) {
+				         cdid = response;					 
+					 if (!isInteger(response)) {
+					    alert('Failed add')
+					 } else {
+						// clear if it's good
+						for (i = 0; i < 4; i++) {
+						  $(fields.get(i)).val('');
+						}
+					 }
+				       }
+				       
+				       );
+				//oTable.fnAddData( [
+				//	cdid,
+				//	asin,
+			//		artist,
+			//		title,
+			//		upc] );
+			}
+			
+			/* for delete: Get the rows which are currently selected */
+			function fnGetSelected( oTableLocal )
+			{
+				var aReturn = new Array();
+				var aTrs = oTableLocal.fnGetNodes();
+				
+				for ( var i=0 ; i<aTrs.length ; i++ )
+				{
+					if ( $(aTrs[i]).hasClass('row_selected') )
+					{
+						aReturn.push( aTrs[i] );
+					}
+				}
+				return aReturn;
+			}
+						
+			function sendTheEdit(item, sValue)
+			{
+				var aPos = oTable.fnGetPosition( item );
+				var row = oTable.fnGetData(aPos[0]);
+				row[aPos[1]] = sValue;
+				$.post('/update/', { cdid: row[0], asin:row[1], artist:row[2], title:row[3], upc:row[4] });
+				oTable.fnUpdate( sValue, aPos[0], aPos[1], false );
+				console.log(item);
+				oTable.fnDraw();
+				console.log(sValue);
+				console.log($(item).text());
+			}
+			
+			function reAddEdity() {
+				$('#supertable tbody td').editable( '/editor/', {
+					"callback": function( sValue, y ) {
+								console.log(this);
+								console.log(sValue);
+								console.log(y);
+								// above - note the callback called twice
+								/* Redraw the table from the new data on the server */
+								oTable.fnDraw();
+								var aPos = oTable.fnGetPosition( this );
+								oTable.fnUpdate( sValue, aPos[0], aPos[1] ); 
+								// UPDATE sends first call...after this the get happens again...
+								// note, there are TWO calls to grab data following tha edit
+								var row = oTable.fnGetData(aPos[0]);
+								$.post('/update/', { cdid: row[0], asin:row[1], artist:row[2], title:row[3], upc:row[4] });
+							},
+							"height": "14px"
+				} );					
+			}
+		</script>
+	</head>
+	<body id="dt_supertable">
+		<div id="container">
+			<div class="full_width big">
+				Visible CDs
+			</div>
+				<p><a href="javascript:void(0);" onclick="fnClickAddRow();">Click to add the row below.</a></p>
+		<form id='newRow'>
+			ASIN:<input size=16 name='ASIN'/> Artist:<input size=20 name='Artist'/> Title:<input size='20' name='Title'/> UPC:<input size='20' name='UPC'/>
+		</form>
+
+		<p><a href="javascript:void(0)" id="delete">Delete selected row</a></p>
+
+<div id="dynamic">
+<table cellpadding="0" cellspacing="0" border="0" class="display" id="supertable">
+	<thead>
+		<tr>
+			<th width="20%">CD ID</th>
+			<th width="25%">ASIN</th>
+			<th width="25%">Artist</th>
+			<th width="15%">Title</th>
+			<th width="15%">UPC</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td colspan="5" class="dataTables_empty">Loading data from server</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<th>CD ID</th>
+			<th>ASIN</th>
+			<th>Artist</th>
+			<th>Title</th>
+			<th>UPC</th>
+		</tr>
+	</tfoot>
+</table>
+			</div>
+			<div class="spacer"></div>
+		</div>
+	</body>
+</html>

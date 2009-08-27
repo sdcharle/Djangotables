@@ -1,0 +1,21 @@
+Django table editor:
+
+Stats Aug 22
+
+All basic functionality OK, add, edit, delete.
+
+Weird or annoying things:
+
+if you add a field that's an empty string it shows as 'Click To Edit'
+Weird javascript err if you do add to table (datatables func) as part of add
+hiding the ID field causes things to get whacked.
+If you edit on a page other than the first, it jumps back to a previous page
+
+To add:
+Show err message in red instead of alert for failed add
+Add button instead of 'click to add'
+Delete button that shows up to right (left?) of selected row
+
+Nice to have
+More parametrized/easily mod'ed stuff (can swap in other data models easily)
+nice colors, etc

@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		
+		<title>CD Table Display</title>
+		<style type="text/css" title="currentStyle">
+			@import "../../static_media/css/basics.css";
+
+		</style>
+		<script type="text/javascript" language="javascript" src="../../static_media/js/jquery.js"></script>
+		<script type="text/javascript" language="javascript" src="../../static_media/js/jquery.dataTables.js"></script>
+		<script type="text/javascript" charset="utf-8">
+			$(document).ready(function() {
+				$('#example').dataTable( {
+					"bProcessing": true,
+					"bServerSide": true,
+					"sAjaxSource": "../cds"
+				} );
+			} );
+		</script>
+	</head>
+	<body id="dt_example">
+		<div id="container">
+			<div class="full_width big">
+				<i>DataTables</i> server-side processing example
+			</div>
+			
+			<h1>Live example</h1>
+			<div id="dynamic">
+<table cellpadding="0" cellspacing="0" border="0" class="display" id="example">
+	<thead>
+		<tr>
+			<th width="20%">CD ID</th>
+			<th width="25%">ASIN</th>
+			<th width="25%">Artist</th>
+			<th width="15%">Title</th>
+			<th width="15%">UPC</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td colspan="5" class="dataTables_empty">Loading data from server</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<th>CD ID</th>
+			<th>ASIN</th>
+			<th>Artist</th>
+			<th>Title</th>
+			<th>UPC</th>
+		</tr>
+	</tfoot>
+</table>
+			</div>
+			<div class="spacer"></div>
+		</div>
+	</body>
+</html>
