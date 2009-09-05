@@ -28,5 +28,5 @@ if djangoweb.settings.DEBUG:
     urlpatterns += patterns('django.views.static',
     (r'^static_media/(?P<path>.*)$', 
         'serve', {
-        'document_root': '/Users/scharlesworth/djangoTablesWork/djangoweb/static_media',
+        'document_root': '/Users/scharlesworth/Djangotables/djangoweb/static_media',
         'show_indexes': True }),)

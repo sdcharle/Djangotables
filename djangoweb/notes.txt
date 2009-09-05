@@ -19,3 +19,62 @@ Delete button that shows up to right (left?) of selected row
 Nice to have
 More parametrized/easily mod'ed stuff (can swap in other data models easily)
 nice colors, etc
+
+Sept 3
+
+On git(?)
+
+Some last fixes!
+
+Q's
+
+Pipelining example. what IS fnCallback()?
+
+don't forget fnSettings
+
+.    var oSettings = oTable.fnSettings();
+06.     
+07.    /* Show an example parameter from the settings */
+08.    alert( oSettings.iDisplayStart );
+
+
+Gets and sets
+
+var oCache = {
+	iCacheLower: -1
+};
+
+function fnSetKey( aoData, sKey, mValue )
+{
+	for ( var i=0, iLen=aoData.length ; i<iLen ; i++ )
+	{
+		if ( aoData[i].name == sKey )
+		{
+			aoData[i].value = mValue;
+		}
+	}
+}
+
+function fnGetKey( aoData, sKey )
+{
+	for ( var i=0, iLen=aoData.length ; i<iLen ; i++ )
+	{
+		if ( aoData[i].name == sKey )
+		{
+			return aoData[i].value;
+		}
+	}
+	return null;
+}
+
+function fnDataTablesPipeline ( sSource, aoData, fnCallback ) {
+	var iPipe = 5; /* Ajust the pipe size */
+	
+	var bNeedServer = false;
+	var sEcho = fnGetKey(aoData, "sEcho");
+	var iRequestStart = fnGetKey(aoData, "iDisplayStart");
+	var iRequestLength = fnGetKey(aoData, "iDisplayLength");
+
+You can either use $.live, or fnDrawCallback to re-add the events. You can also use my Visual Event bookmarklet to help debug event issues.
+
+

@@ -32,13 +32,17 @@
 					"bProcessing": true, // shows 'processing' label
 					"bServerSide": true, // - dropping this but leaving cd = troub
 					"sAjaxSource": "/cds/",
+					"bStateSave": true, // presumably saves state for reloads
+
 					"fnDrawCallback": function () {
+						//var oSettings = oTable.fnSettings();				
+						//alert( oSettings );
 						if (indexShit >= 0) {
 							nextBox = $("#supertable tbody td:eq(" +(indexShit)+")");
 							reAddEdity();
 							$(nextBox).click();
 							indexShit = -1;
-							console.log($(nextBox).text());
+							console.log("here we advance:" + $(nextBox).text());
 						}
 /*
 Have you reapplied the jEditable event handlers before your call .click()?
@@ -49,8 +53,6 @@ so any events attached to the old table are lost, and need to be replaced.
 							//"onblur": "submit", // submits but then focus is FUCKED
 							"callback": function( sValue, y ) {
 								console.log(this);
-								console.log(sValue);
-								console.log(y);
 								// above - note the callback called twice
 								/* Redraw the table from the new data on the server */
 								oTable.fnDraw();
@@ -133,12 +135,6 @@ so any events attached to the old table are lost, and need to be replaced.
 				       }
 				       
 				       );
-				//oTable.fnAddData( [
-				//	cdid,
-				//	asin,
-			//		artist,
-			//		title,
-			//		upc] );
 			}
 			
 			/* for delete: Get the rows which are currently selected */
@@ -164,7 +160,8 @@ so any events attached to the old table are lost, and need to be replaced.
 				row[aPos[1]] = sValue;
 				$.post('/update/', { cdid: row[0], asin:row[1], artist:row[2], title:row[3], upc:row[4] });
 				oTable.fnUpdate( sValue, aPos[0], aPos[1], false );
-				console.log(item);
+				//console.log(item);
+				// very strange! the above FAILED - no console?
 				oTable.fnDraw();
 				console.log(sValue);
 				console.log($(item).text());
